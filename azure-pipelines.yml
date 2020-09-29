@@ -16,10 +16,10 @@ stages:
       - bash: |
           echo {} > ~/.databricks-connect
           conda env create --force --name databricks --file conda.yml
-          eval "$(conda shell.bash hook)"
-          conda activate databricks
         displayName: Setup environment        
       - bash: |
+          eval "$(conda shell.bash hook)"
+          conda activate databricks
           pytest --disable-warnings -rp -vv --cov-report xml:cov.xml --cov=. -o junit_family=xunit2 --junitxml=TEST-iris_model.xml tests/
         displayName: Execute unit tests
         env:
