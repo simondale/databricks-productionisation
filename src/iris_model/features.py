@@ -19,15 +19,16 @@ class FeatureDataProvider:
 class FeatureStore:
     def __init__(self, feature_provider: FeatureDataProvider):
         self.feature_provider = feature_provider
+        self.feature_data = feature_provider.get_training_dataframe().cache()
 
     def create_training_features(self):
-        df = self.feature_provider.get_training_dataframe().select(
+        df = self.feature_data.select(
             "id", "sepal_length", "sepal_width", "petal_length", "petal_width"
         )
         self.feature_provider.save_dataframe(df, "iris_data")
 
     def create_training_target(self):
-        df = self.feature_provider.get_training_dataframe().select(
+        df = self.feature_data.select(
             "id", "species"
         )
         self.feature_provider.save_dataframe(df, "iris_target")

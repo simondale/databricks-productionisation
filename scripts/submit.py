@@ -17,6 +17,11 @@ def main(args):
             'node_type_id': args.get('node_type', 'Standard_F8s'),
             'num_workers': args.get('num_workers', 1)
         },
+        'libraries': [
+            {
+                'whl': args.get('library', 'dbfs:/models/iris_model-0.0.1-py3-none-any.whl')
+            }
+        ],
         'spark_python_task': {
             'python_file': args.get('file', 'dbfs:/driver/datapipeline.py')
         }
@@ -46,6 +51,7 @@ if __name__ == '__main__':
     parser.add_argument('--node_type')
     parser.add_argument('--num_workers')
     parser.add_argument('--file')
+    parser.add_argument('--library')
     args = vars(parser.parse_args())
     args = {k: v for k, v in args.items() if v is not None}
     main(args)
