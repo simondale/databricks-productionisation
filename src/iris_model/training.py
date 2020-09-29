@@ -4,6 +4,7 @@ from sklearn import tree
 import mlflow
 import mlflow.sklearn
 import seaborn as sns
+import shutil
 
 
 class TrainingDataProvider:
@@ -47,5 +48,7 @@ class TrainingPipeline:
             )
             mlflow.sklearn.save_model(
                 sk_model, run.info.run_id, serialization_format=self.format
-            )   
+            )
+
+            shutil.rmtree(run.info.run_id, ignore_errors=True)
 
