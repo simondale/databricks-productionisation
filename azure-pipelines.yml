@@ -5,6 +5,8 @@ stages:
 
 - stage: Build
   displayName: Build artefacts
+  variables:
+    - group: dev
   pool: 
     vm-image: ubuntu-latest
   jobs:
