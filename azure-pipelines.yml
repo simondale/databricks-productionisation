@@ -16,10 +16,15 @@ stages:
       - bash: |
           echo {} > ~/.databricks-connect
           conda env create --force --name databricks --file conda.yml
+        displayName: Setup environment
+      - bash: |
           eval "$(conda shell.bash hook)"
           conda activate databricks
-        displayName: Setup environment        
+          python setup.py develop
+        displayName: Build library
       - bash: |
+          eval "$(conda shell.bash hook)"
+          conda activate databricks
           pytest --disable-warnings -rp -vv --cov-report xml:cov.xml --cov=. -o junit_family=xunit2 --junitxml=TEST-iris_model.xml tests/
         displayName: Execute unit tests
         env:
@@ -30,17 +35,22 @@ stages:
             DATABRICKS_CLUSTER_ID: $(DatabricksCluster)
             DATABRICKS_PORT: 15001
       - bash: |
+          eval "$(conda shell.bash hook)"
+          conda activate databricks
           python setup.py bdist_wheel
         displayName: Build library
       - task: CopyFiles@2
         displayName: Copy Assets to Staging Folder
         inputs:
           Contents: |
+            scripts/**py
             driver/**.py
             **/TEST-*.xml
             dist/**.whl
           TargetFolder: $(Build.ArtifactStagingDirectory)
       - bash: |
+          eval "$(conda shell.bash hook)"
+          conda activate databricks
           databricks workspace mkdirs /Experiments
           databricks fs cp --recursive --overwrite $(Build.ArtifactStagingDirectory)/dist dbfs:/models/
           databricks fs cp --recursive --overwrite $(Build.ArtifactStagingDirectory)/driver dbfs:/driver/
@@ -48,174 +58,39 @@ stages:
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
-      - powershell:
-          $run = @{
-            "run_name"="datapipeline";
-            "new_cluster"=@{
-              "spark_version"="7.1.x-cpu-ml-scala2.12";
-              "node_type_id"="Standard_F8s";
-              "num_workers"=1;
-            };
-            "spark_python_task"="{
-              "python_file"="dbfs:/driver/datapipeline.py";
-            };"
-          }
-
-          $body = ($run | ConvertTo-Json).Replace("`"", "`"`""")
-          $runId = databricks runs submit --json "$body" | ConvertFrom-Json
-          if ($runId.run_id -eq $null) {
-            Write-Host "##vso[task.logissue type=error]Unable to create run $runId"
-            exit 1
-          } else {
-            Write-Host "Run ID $runId"
-          }
-
-          while ($true) {
-            $state = databricks runs get --run-id $runId.run_id | ConvertFrom-Json
-            $s = $state.state.life_cycle_state
-            Write-Host $s
-            if ($s -eq "TERMINATED") {
-              break
-            } elseif ($s -eq "SKIPPED") {
-              Write-Host "##vso[task.logissue type=error]Databricks processing SKIPPED"
-              exit 1
-            } elseif ($s -eq "INTERNAL_ERROR") {
-              Write-Host "##vso[task.logissue type=error]Databricks processing INTERNAL_ERROR $($state.state.state_message)"
-              exit 1
-            }
-            Sleep -Seconds 5
-          }
+      
+      - bash: |
+          eval "$(conda shell.bash hook)"
+          conda activate databricks
+          python scripts/submit.py --file dbfs:/driver/datapipeline.py
         displayName: Execute data pipeline
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
-
-      - powershell:
-          $run = @{
-            "run_name"="features";
-            "new_cluster"=@{
-              "spark_version"="7.1.x-cpu-ml-scala2.12";
-              "node_type_id"="Standard_F8s";
-              "num_workers"=1;
-            };
-            "spark_python_task"="{
-              "python_file"="dbfs:/driver/features.py";
-            };"
-          }
-
-          $body = ($run | ConvertTo-Json).Replace("`"", "`"`""")
-          $runId = databricks runs submit --json "$body" | ConvertFrom-Json
-          if ($runId.run_id -eq $null) {
-            Write-Host "##vso[task.logissue type=error]Unable to create run $runId"
-            exit 1
-          } else {
-            Write-Host "Run ID $runId"
-          }
-
-          while ($true) {
-            $state = databricks runs get --run-id $runId.run_id | ConvertFrom-Json
-            $s = $state.state.life_cycle_state
-            Write-Host $s
-            if ($s -eq "TERMINATED") {
-              break
-            } elseif ($s -eq "SKIPPED") {
-              Write-Host "##vso[task.logissue type=error]Databricks processing SKIPPED"
-              exit 1
-            } elseif ($s -eq "INTERNAL_ERROR") {
-              Write-Host "##vso[task.logissue type=error]Databricks processing INTERNAL_ERROR $($state.state.state_message)"
-              exit 1
-            }
-            Sleep -Seconds 5
-          }
-        displayName: Execute feature pipeline
+      - bash: |
+          eval "$(conda shell.bash hook)"
+          conda activate databricks
+          python scripts/submit.py --file dbfs:/driver/features.py
+        displayName: Execute features pipeline
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
-      
-      - powershell:
-          $run = @{
-            "run_name"="training";
-            "new_cluster"=@{
-              "spark_version"="7.1.x-cpu-ml-scala2.12";
-              "node_type_id"="Standard_F8s";
-              "num_workers"=1;
-            };
-            "spark_python_task"="{
-              "python_file"="dbfs:/driver/training.py";
-            };"
-          }
-
-          $body = ($run | ConvertTo-Json).Replace("`"", "`"`""")
-          $runId = databricks runs submit --json "$body" | ConvertFrom-Json
-          if ($runId.run_id -eq $null) {
-            Write-Host "##vso[task.logissue type=error]Unable to create run $runId"
-            exit 1
-          } else {
-            Write-Host "Run ID $runId"
-          }
-
-          while ($true) {
-            $state = databricks runs get --run-id $runId.run_id | ConvertFrom-Json
-            $s = $state.state.life_cycle_state
-            Write-Host $s
-            if ($s -eq "TERMINATED") {
-              break
-            } elseif ($s -eq "SKIPPED") {
-              Write-Host "##vso[task.logissue type=error]Databricks processing SKIPPED"
-              exit 1
-            } elseif ($s -eq "INTERNAL_ERROR") {
-              Write-Host "##vso[task.logissue type=error]Databricks processing INTERNAL_ERROR $($state.state.state_message)"
-              exit 1
-            }
-            Sleep -Seconds 5
-          }
+      - bash: |
+          eval "$(conda shell.bash hook)"
+          conda activate databricks
+          python scripts/submit.py --file dbfs:/driver/training.py
         displayName: Execute training pipeline
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
-
-      - powershell:
-          $run = @{
-            "run_name"="serving";
-            "new_cluster"=@{
-              "spark_version"="7.1.x-cpu-ml-scala2.12";
-              "node_type_id"="Standard_F8s";
-              "num_workers"=1;
-            };
-            "spark_python_task"="{
-              "python_file"="dbfs:/driver/serving.py";
-            };"
-          }
-
-          $body = ($run | ConvertTo-Json).Replace("`"", "`"`""")
-          $runId = databricks runs submit --json "$body" | ConvertFrom-Json
-          if ($runId.run_id -eq $null) {
-            Write-Host "##vso[task.logissue type=error]Unable to create run $runId"
-            exit 1
-          } else {
-            Write-Host "Run ID $runId"
-          }
-
-          while ($true) {
-            $state = databricks runs get --run-id $runId.run_id | ConvertFrom-Json
-            $s = $state.state.life_cycle_state
-            Write-Host $s
-            if ($s -eq "TERMINATED") {
-              break
-            } elseif ($s -eq "SKIPPED") {
-              Write-Host "##vso[task.logissue type=error]Databricks processing SKIPPED"
-              exit 1
-            } elseif ($s -eq "INTERNAL_ERROR") {
-              Write-Host "##vso[task.logissue type=error]Databricks processing INTERNAL_ERROR $($state.state.state_message)"
-              exit 1
-            }
-            Sleep -Seconds 5
-          }
+      - bash: |
+          eval "$(conda shell.bash hook)"
+          conda activate databricks
+          python scripts/submit.py --file dbfs:/driver/serving.py
         displayName: Execute serving pipeline
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
-
       - task: PublishBuildArtifacts@1
         displayName: Publish Artefacts
         inputs:
