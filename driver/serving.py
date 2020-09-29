@@ -8,6 +8,8 @@ def main():
     serving = ServingPipeline(serving_data)
     serving.make_predictions()
 
+    spark.sql('SELECT * FROM `iris_results`').show()
+
 
 if __name__ == '__main__':
     main()

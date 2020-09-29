@@ -22,7 +22,7 @@ class FeatureStore:
 
     def create_training_features(self):
         df = self.feature_provider.get_training_dataframe().select(
-            "id" "sepal_length", "sepal_width", "petal_length", "petal-width"
+            "id", "sepal_length", "sepal_width", "petal_length", "petal_width"
         )
         self.feature_provider.save_dataframe(df, "iris_data")
 

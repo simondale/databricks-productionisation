@@ -14,7 +14,7 @@ class ServingDataProvider:
         return self.spark.table('iris_data')
 
     def save_data(self, data: DataFrame, target: str):
-        data.format('delta').mode('overwrite').save(target)
+        data.write.format('delta').mode('overwrite').saveAsTable(target)
 
 
 class ServingPipeline:
@@ -39,10 +39,10 @@ class ServingPipeline:
             })
             pdf['prediction'] = model.predict(pdf)
             return pdf['prediction']
-                  
+
         predict_species = pandas_udf(prediction, StringType())
         df = df.withColumn(
-            'prediction', 
+            'prediction',
             predict_species(
                 'sepal_length', 'sepal_width', 'petal_length', 'petal_width'
             )
