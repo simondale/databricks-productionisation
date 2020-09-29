@@ -18,6 +18,8 @@ stages:
           conda env create --force --name databricks --file conda.yml
         displayName: Setup environment
       - bash: |
+          eval "$(conda shell.bash hook)"
+          conda activate databricks
           python setup.py develop
         displayName: Build library
       - bash: |
@@ -33,6 +35,8 @@ stages:
             DATABRICKS_CLUSTER_ID: $(DatabricksCluster)
             DATABRICKS_PORT: 15001
       - bash: |
+          eval "$(conda shell.bash hook)"
+          conda activate databricks
           python setup.py bdist_wheel
         displayName: Build library
       - task: CopyFiles@2
