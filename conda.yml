@@ -1,0 +1,26 @@
+channels:
+  - defaults
+dependencies:
+  - flake8
+  - pylint
+  - pytest-cov
+  - pydocstyle
+  - black
+  - Faker
+  - notebook
+  - cloudpickle=1.3.0
+  - docutils=0.15.2  
+  - numpy=1.18.1
+  - pandas=1.0.1
+  - pyodbc=4.0.30
+  - pip=20.0.2
+  - python=3.7.6
+  - scikit-learn=0.22.1
+  - wheel=0.34.2
+  - pip:
+    - databricks-cli==0.11.0
+    - databricks-connect==7.1.0
+    - mlflow==1.9.1
+    - pyarrow==0.15.1
+    - pyyaml==5.3.1
+    - seaborn==0.10.0
