@@ -13,7 +13,7 @@ stages:
     steps:
       - bash: |
           echo {} > ~/.databricks-connect
-          conda create --yes --name $ENV --file conda.yml
+          conda env create --force --name $ENV --file conda.yml
         displayName: Setup environment
         env:
           ENV: $(CondaEnvironment)
