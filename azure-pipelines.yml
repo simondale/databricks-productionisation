@@ -65,10 +65,10 @@ stages:
           $body = ($run | ConvertTo-Json).Replace("`"", "`"`""")
           $runId = databricks runs submit --json "$body" | ConvertFrom-Json
           if ($runId.run_id -eq $null) {
-            Write-Host "##vso[task.logissue type=error]Unable to create run: $runId"
+            Write-Host "##vso[task.logissue type=error]Unable to create run $runId"
             exit 1
           } else {
-            Write-Host "Run ID: $runId"
+            Write-Host "Run ID $runId"
           }
 
           while ($true) {
@@ -81,7 +81,7 @@ stages:
               Write-Host "##vso[task.logissue type=error]Databricks processing SKIPPED"
               exit 1
             } elseif ($s -eq "INTERNAL_ERROR") {
-              Write-Host "##vso[task.logissue type=error]Databricks processing INTERNAL_ERROR: $($state.state.state_message)"
+              Write-Host "##vso[task.logissue type=error]Databricks processing INTERNAL_ERROR $($state.state.state_message)"
               exit 1
             }
             Sleep -Seconds 5
@@ -107,10 +107,10 @@ stages:
           $body = ($run | ConvertTo-Json).Replace("`"", "`"`""")
           $runId = databricks runs submit --json "$body" | ConvertFrom-Json
           if ($runId.run_id -eq $null) {
-            Write-Host "##vso[task.logissue type=error]Unable to create run: $runId"
+            Write-Host "##vso[task.logissue type=error]Unable to create run $runId"
             exit 1
           } else {
-            Write-Host "Run ID: $runId"
+            Write-Host "Run ID $runId"
           }
 
           while ($true) {
@@ -123,7 +123,7 @@ stages:
               Write-Host "##vso[task.logissue type=error]Databricks processing SKIPPED"
               exit 1
             } elseif ($s -eq "INTERNAL_ERROR") {
-              Write-Host "##vso[task.logissue type=error]Databricks processing INTERNAL_ERROR: $($state.state.state_message)"
+              Write-Host "##vso[task.logissue type=error]Databricks processing INTERNAL_ERROR $($state.state.state_message)"
               exit 1
             }
             Sleep -Seconds 5
@@ -149,10 +149,10 @@ stages:
           $body = ($run | ConvertTo-Json).Replace("`"", "`"`""")
           $runId = databricks runs submit --json "$body" | ConvertFrom-Json
           if ($runId.run_id -eq $null) {
-            Write-Host "##vso[task.logissue type=error]Unable to create run: $runId"
+            Write-Host "##vso[task.logissue type=error]Unable to create run $runId"
             exit 1
           } else {
-            Write-Host "Run ID: $runId"
+            Write-Host "Run ID $runId"
           }
 
           while ($true) {
@@ -165,7 +165,7 @@ stages:
               Write-Host "##vso[task.logissue type=error]Databricks processing SKIPPED"
               exit 1
             } elseif ($s -eq "INTERNAL_ERROR") {
-              Write-Host "##vso[task.logissue type=error]Databricks processing INTERNAL_ERROR: $($state.state.state_message)"
+              Write-Host "##vso[task.logissue type=error]Databricks processing INTERNAL_ERROR $($state.state.state_message)"
               exit 1
             }
             Sleep -Seconds 5
@@ -191,10 +191,10 @@ stages:
           $body = ($run | ConvertTo-Json).Replace("`"", "`"`""")
           $runId = databricks runs submit --json "$body" | ConvertFrom-Json
           if ($runId.run_id -eq $null) {
-            Write-Host "##vso[task.logissue type=error]Unable to create run: $runId"
+            Write-Host "##vso[task.logissue type=error]Unable to create run $runId"
             exit 1
           } else {
-            Write-Host "Run ID: $runId"
+            Write-Host "Run ID $runId"
           }
 
           while ($true) {
@@ -207,7 +207,7 @@ stages:
               Write-Host "##vso[task.logissue type=error]Databricks processing SKIPPED"
               exit 1
             } elseif ($s -eq "INTERNAL_ERROR") {
-              Write-Host "##vso[task.logissue type=error]Databricks processing INTERNAL_ERROR: $($state.state.state_message)"
+              Write-Host "##vso[task.logissue type=error]Databricks processing INTERNAL_ERROR $($state.state.state_message)"
               exit 1
             }
             Sleep -Seconds 5
