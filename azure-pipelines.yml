@@ -1,0 +1,56 @@
+trigger: 
+- master
+
+stages:
+
+- stage: Build
+  displayName: Build artefacts
+  pool: 
+    vm-image: ubuntu-latest
+  jobs:
+  - job:
+    displayName: Create artefact
+    steps:
+      - bash: |
+          echo {} > ~/.databricks-connect
+          conda env create --force --name $ENV --file conda.yml
+        displayName: Setup environment
+        env:
+          ENV: $(CondaEnvironment)
+      - bash: |
+          pytest --disable-warnings -rp -vv --cov-report xml:cov.xml --cov=. -o junit_family=xunit2 --junitxml=TEST-iris_model.xml tests/
+        displayName: Execute unit tests
+        env:
+            SPARK_LOCAL_IP: 127.0.0.1
+            DATABRICKS_ADDRESS: $(DatabricksUrl)
+            DATABRICKS_API_TOKEN: $(DatabricksToken)
+            DATABRICKS_ORG: $(DatabricksOrg)
+            DATABRICKS_CLUSTER_ID: $(DatabricksCluster)
+            DATABRICKS_PORT: 15001
+      - bash: |
+          python setup.py bdist_wheel
+        displayName: Build library
+      - task: CopyFiles@2
+        displayName: Copy Assets to Staging Folder
+        inputs:
+          Contents: |
+            driver/**.py
+            **/TEST-*.xml
+            dist/**.whl
+          TargetFolder: $(Build.ArtifactStagingDirectory)
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Artefacts
+        inputs:
+          PathtoPublish: $(Build.ArtifactStagingDirectory)
+          ArtifactName: drop
+          publishLocation: Container
+      - task: PublishTestResults@2
+        inputs:
+            testResultsFormat: JUnit
+            testResultsFiles: '**/TEST-*.xml'
+            searchFolder: $(Build.ArtifactStagingDirectory)/drop/
+            mergeTestResults: true
+            failTaskOnFailedTests: true
+            testRunTitle: Pipeline Tests
+
+
