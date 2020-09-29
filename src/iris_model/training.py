@@ -47,5 +47,5 @@ class TrainingPipeline:
             )
             mlflow.sklearn.save_model(
                 sk_model, run.info.run_id, serialization_format=self.format
-            )
+            )   
 
