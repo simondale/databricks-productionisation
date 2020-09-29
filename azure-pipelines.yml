@@ -16,10 +16,10 @@ stages:
       - bash: |
           echo {} > ~/.databricks-connect
           conda env create --force --name databricks --file conda.yml
-          conda init --all
+          eval "$(conda shell.bash hook)"
+          conda activate databricks
         displayName: Setup environment        
       - bash: |
-          conda activate databricks
           pytest --disable-warnings -rp -vv --cov-report xml:cov.xml --cov=. -o junit_family=xunit2 --junitxml=TEST-iris_model.xml tests/
         displayName: Execute unit tests
         env:
@@ -30,7 +30,6 @@ stages:
             DATABRICKS_CLUSTER_ID: $(DatabricksCluster)
             DATABRICKS_PORT: 15001
       - bash: |
-          conda activate databricks
           python setup.py bdist_wheel
         displayName: Build library
       - task: CopyFiles@2
@@ -42,7 +41,6 @@ stages:
             dist/**.whl
           TargetFolder: $(Build.ArtifactStagingDirectory)
       - bash: |
-          conda activate databricks
           databricks workspace mkdirs /Experiments
           databricks fs cp --recursive --overwrite $(Build.ArtifactStagingDirectory)/dist dbfs:/models/
           databricks fs cp --recursive --overwrite $(Build.ArtifactStagingDirectory)/driver dbfs:/driver/
@@ -51,7 +49,6 @@ stages:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
       - powershell:
-          conda activate databricks
           $run = @{
             "run_name"="datapipeline";
             "new_cluster"=@{
@@ -94,7 +91,6 @@ stages:
             DATABRICKS_TOKEN: $(DatabricksToken)
 
       - powershell:
-          conda activate databricks
           $run = @{
             "run_name"="features";
             "new_cluster"=@{
@@ -137,7 +133,6 @@ stages:
             DATABRICKS_TOKEN: $(DatabricksToken)
       
       - powershell:
-          conda activate databricks
           $run = @{
             "run_name"="training";
             "new_cluster"=@{
@@ -180,7 +175,6 @@ stages:
             DATABRICKS_TOKEN: $(DatabricksToken)
 
       - powershell:
-          conda activate databricks
           $run = @{
             "run_name"="serving";
             "new_cluster"=@{
