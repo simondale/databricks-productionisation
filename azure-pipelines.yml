@@ -16,7 +16,10 @@ stages:
       - bash: |
           echo {} > ~/.databricks-connect
           conda env create --force --name databricks --file conda.yml
-        displayName: Setup environment        
+        displayName: Setup environment
+      - bash: |
+          python setup.py develop
+        displayName: Build library
       - bash: |
           eval "$(conda shell.bash hook)"
           conda activate databricks
