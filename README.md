@@ -17,4 +17,20 @@ conda activate <env>
 
 Replace the ...s above with relevant settings from Databricks
 
-#
+# Development
+
+```
+python setup.py develop
+```
+
+# Build
+
+```
+python setup.py bdist_wheel
+```
+
+# Hosting
+
+```
+gunicorn --bind 0.0.0.0:5000 iris_model.hosting:app
+```
