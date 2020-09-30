@@ -34,3 +34,13 @@ python setup.py bdist_wheel
 ```
 gunicorn --bind 0.0.0.0:5000 iris_model.hosting:app
 ```
+
+# Docker
+
+```
+build -t iris_model .
+```
+
+```
+docker run --rm -e DATABRICKS_HOST -e DATABRICKS_TOKEN -p 5000:5000 -it iris_model
+```
