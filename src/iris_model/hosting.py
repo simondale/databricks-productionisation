@@ -1,5 +1,5 @@
 from flask import Flask, Response, request
-from flask_restful import Resource, Api
+from flask_restful import Api
 
 import mlflow
 import mlflow.sklearn
@@ -20,6 +20,3 @@ def predict():
     pdf['prediction'] = model.predict(pdf)
     return Response(pdf.to_json(orient='split'), status=200)
 
-
-def run(host: str, port: int):
-    app.run(host=host, port=port)
