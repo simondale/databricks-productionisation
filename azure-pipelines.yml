@@ -53,9 +53,9 @@ stages:
             testRunTitle: Pipeline Tests
       - task: PublishCodeCoverageResults@1
         inputs:
-            codeCoverageTool: Cobertura
-            summaryFileLocation: '**/coverage.xml'
-            reportDirectory: '**/htmlcov'
+          codeCoverageTool: 'Cobertura'
+          summaryFileLocation: '**/cov.xml'
+          reportDirectory: '**/htmlcov'
       - bash: |
           eval "$(conda shell.bash hook)"
           conda activate databricks
