@@ -35,7 +35,7 @@ stages:
       - bash: |
           eval "$(conda shell.bash hook)"
           conda activate databricks
-          pytest --disable-warnings -rp -vv --cov-report xml:cov.xml --cov-report html --cov=. -o junit_family=xunit2 --junitxml=TEST-iris_model.xml tests/
+          pytest --disable-warnings -rp -vv --cov-report xml:cov.xml --cov=. -o junit_family=xunit2 --junitxml=TEST-iris_model.xml tests/
         displayName: Execute unit tests
         env:
             SPARK_LOCAL_IP: 127.0.0.1
@@ -55,7 +55,6 @@ stages:
         inputs:
           codeCoverageTool: 'Cobertura'
           summaryFileLocation: '**/cov.xml'
-          reportDirectory: '**/htmlcov'
       - bash: |
           eval "$(conda shell.bash hook)"
           conda activate databricks
