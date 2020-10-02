@@ -6,7 +6,9 @@ import pytest
 
 class TestDataProvider(DataProvider):
     def load_data(self, source: str) -> DataFrame:
-        self.source = self.spark.createDataFrame(sns.load_dataset('iris').iloc[:1, :]).cache()
+        self.source = self.spark.createDataFrame(
+            sns.load_dataset("iris").iloc[:1, :]
+        ).cache()
         return self.source
 
     def save_data(self, data_frame: DataFrame, target: str):

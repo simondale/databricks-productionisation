@@ -46,7 +46,7 @@ class ServingPipeline:
         predict_species = pandas_udf(prediction, StringType())
         df = df.withColumn(
             "prediction",
-            predict_species(
+            predict_species(  # pylint: disable=too-many-function-args, redundant-keyword-arg
                 "sepal_length", "sepal_width", "petal_length", "petal_width"
             ),
         )

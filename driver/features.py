@@ -8,7 +8,7 @@ def main():
     feature_store = FeatureStore(feature_provider)
     feature_store.create_training_features()
     feature_store.create_training_target()
-    
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
