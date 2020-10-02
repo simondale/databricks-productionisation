@@ -19,4 +19,3 @@ def predict():
     pdf = pd.read_json(body, orient='split')
     pdf['prediction'] = model.predict(pdf)
     return Response(pdf.to_json(orient='split'), status=200)
-

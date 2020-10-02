@@ -5,16 +5,17 @@ from pyspark.sql.types import StringType
 import mlflow.sklearn
 import pandas as pd
 
+
 class ServingDataProvider:
     def __init__(self, spark: SparkSession, dbutils):
         self.spark = spark
         self.dbutils = dbutils
 
     def load_data(self) -> DataFrame:
-        return self.spark.table('iris_data')
+        return self.spark.table("iris_data")
 
     def save_data(self, data: DataFrame, target: str):
-        data.write.format('delta').mode('overwrite').saveAsTable(target)
+        data.write.format("delta").mode("overwrite").saveAsTable(target)
 
 
 class ServingPipeline:
@@ -28,24 +29,26 @@ class ServingPipeline:
             sepal_length: pd.Series,
             sepal_width: pd.Series,
             petal_length: pd.Series,
-            petal_width: pd.Series
+            petal_width: pd.Series,
         ) -> pd.Series:
-            model = mlflow.sklearn.load_model('models:/iris/None')
-            pdf = pd.DataFrame({
-                'sepal_length': sepal_length,
-                'sepal_width': sepal_width,
-                'petal_length': petal_length,
-                'petal_width': petal_width
-            })
-            pdf['prediction'] = model.predict(pdf)
-            return pdf['prediction']
+            model = mlflow.sklearn.load_model("models:/iris/None")
+            pdf = pd.DataFrame(
+                {
+                    "sepal_length": sepal_length,
+                    "sepal_width": sepal_width,
+                    "petal_length": petal_length,
+                    "petal_width": petal_width,
+                }
+            )
+            pdf["prediction"] = model.predict(pdf)
+            return pdf["prediction"]
 
         predict_species = pandas_udf(prediction, StringType())
         df = df.withColumn(
-            'prediction',
+            "prediction",
             predict_species(
-                'sepal_length', 'sepal_width', 'petal_length', 'petal_width'
-            )
+                "sepal_length", "sepal_width", "petal_length", "petal_width"
+            ),
         )
 
-        self.serving_data.save_data(df, 'iris_results')
+        self.serving_data.save_data(df, "iris_results")
