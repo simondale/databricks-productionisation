@@ -1,9 +1,10 @@
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import pandas_udf
-from pyspark.sql.types import StringType
+from pyspark.sql.functions import expr
+from pyspark.sql.types import StructType, StructField, StringType
 
 import mlflow.sklearn
 import pandas as pd
+import json
 
 
 class ServingDataProvider:
@@ -24,31 +25,21 @@ class ServingPipeline:
 
     def make_predictions(self):
         df = self.serving_data.load_data()
-
-        def prediction(
-            sepal_length: pd.Series,
-            sepal_width: pd.Series,
-            petal_length: pd.Series,
-            petal_width: pd.Series,
-        ) -> pd.Series:
-            model = mlflow.sklearn.load_model("models:/iris/None")
-            pdf = pd.DataFrame(
-                {
-                    "sepal_length": sepal_length,
-                    "sepal_width": sepal_width,
-                    "petal_length": petal_length,
-                    "petal_width": petal_width,
-                }
-            )
-            pdf["prediction"] = model.predict(pdf)
-            return pdf["prediction"]
-
-        predict_species = pandas_udf(prediction, StringType())
-        df = df.withColumn(
-            "prediction",
-            predict_species(  # pylint: disable=too-many-function-args, redundant-keyword-arg
-                "sepal_length", "sepal_width", "petal_length", "petal_width"
-            ),
+        df = df.select(
+            "sepal_length", "sepal_width", "petal_length", "petal_width"
         )
 
+        schema = StructType.fromJson(json.loads(df.schema.json()))
+        schema.add(StructField("prediction", StringType(), True))
+
+        df = df.groupBy(
+            expr("monotonically_increasing_id() % 1000")
+        ).applyInPandas(self._predict_species, schema)
+
         self.serving_data.save_data(df, "iris_results")
+
+    @staticmethod
+    def _predict_species(pdf: pd.DataFrame) -> pd.DataFrame:
+        model = mlflow.sklearn.load_model("models:/iris/None")
+        pdf["prediction"] = model.predict(pdf)
+        return pdf

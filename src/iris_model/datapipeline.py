@@ -8,13 +8,13 @@ class DataProvider:
         self.dbutils = dbutils
 
     def load_data(self, source: str) -> DataFrame:
-        pass
+        pass  # pragma: no cover
 
     def save_data(self, data_frame: DataFrame, target: str):
-        pass
+        pass  # pragma: no cover
 
 
-class DeltaDataProvider(DataProvider):
+class DeltaDataProvider(DataProvider):  # pragma: no cover
     def load_data(self, source: str) -> DataFrame:
         pdf = sns.load_dataset("iris")
         return self.spark.createDataFrame(pdf)
