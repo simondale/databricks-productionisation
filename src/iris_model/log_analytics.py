@@ -7,15 +7,101 @@ import requests
 import datetime
 
 
+class Rfc1123DateProvider:
+    """Provides the current date as a RFC1123 formatted string.
+    """
+
+    FORMAT = "%a, %d %b %Y %H:%M:%S GMT"
+
+    def __init__(self, datetime: datetime = None):
+        """Initialises this instance to an optional datetime.
+
+        Args:
+            datetime:        The optional datetime to use        
+        """
+        self.datetime = datetime
+
+    def now(self) -> str:
+        """Formats the specified datetime (if set) or the current UTC time
+           using the RFC1123 format.
+
+        Returns:
+            The formatted datetime string
+        """
+        return (
+            self.datetime
+            if self.datetime is not None
+            else datetime.datetime.utcnow()
+        ).strftime(Rfc1123DateProvider.FORMAT)
+
+
+class LogAnalyticsRequest:
+    """Sends data to the Log Analytics workspace.
+    """
+
+    RESOURCE = "/api/logs"
+    METHOD = "POST"
+    CONTENT_TYPE = "application/json"
+
+    def send(self, customer_id: str, headers: dict, data: str):
+        """
+
+        Args:
+            customer_id:    The customer ID of the Log Analytics workspace
+            headers:        The headers for the HTTP request
+            data:           The data for the HTTP request
+
+        Returns:
+            The response from the HTTP request
+        """
+        uri = f"https://{customer_id}.ods.opinsights.azure.com{self.RESOURCE}?api-version=2016-04-01"
+        requests.post(uri, data=data, headers=headers)
+
+
+class UuidGenerator:
+    """Generates UUID strings.
+    """
+
+    def __init__(self, uuids: list = None):
+        """Initialises this instance with an optional UUID.
+
+        Args:
+            uuid:       The optional UUID list
+        """
+        self.uuids = uuids
+
+    def new(self):
+        """Generates a new UUID or uses the specified (optional) value.
+
+        Returns:
+            The string representation of the UUID
+        """
+        if self.uuids is not None:
+            length = len(self.uuids)
+            if length > 1:
+                return self.uuids.pop(0)
+            elif length > 0:
+                return self.uuids[0]
+        return str(uuid.uuid4())
+
+
 class LogAnalytics:
     """Writes custom log entries to an Azure Log Analytics workspace.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        date_provider: Rfc1123DateProvider = Rfc1123DateProvider(),
+        log_request: LogAnalyticsRequest = LogAnalyticsRequest(),
+        uuid_provider: UuidGenerator = UuidGenerator(),
+    ):
         """Initialises this instance with default values, including a
            tracking ID that is consistent across all log messages.
         """
-        self.id = uuid.uuid4()
+        self.date_provider = date_provider
+        self.log_request = log_request
+        self.uuid_provider = uuid_provider
+        self.id = self.uuid_provider.new()
 
     def init(
         self,
@@ -28,8 +114,8 @@ class LogAnalytics:
            to a Log Analytics workspace.
 
         Args:
-            customer_id:   The `CustomerId` property of the LogAnalytics workspace
-            shared_key:  The shared key for the workspace
+            customer_id:    The `CustomerId` property of the LogAnalytics workspace
+            shared_key:     The shared key for the workspace
             log_type:       The custom log type name
             category:       The logging category for all messages
         """
@@ -48,8 +134,8 @@ class LogAnalytics:
         if self.log_type is not None:
             msg = [
                 {
-                    "id": str(uuid.uuid4()),
-                    "tracker": str(self.id),
+                    "id": self.uuid_provider.new(),
+                    "tracker": self.id,
                     "level": level,
                     "category": self.category,
                     "message": message,
@@ -90,31 +176,25 @@ class LogAnalytics:
         authorization = f"SharedKey {self.customer_id}:{encoded_hash}"
         return authorization
 
-    def _post_data(self, body: str) -> requests.Response:
+    def _post_data(self, body: str):
         """Send the specified data to the Log Analytics workspace.
 
         Args:
             body:           The data to send to Log Analytics
-
-        Returns:
-            The response from the remote server
         """
-        method = "POST"
-        content_type = "application/json"
-        resource = "/api/logs"
-        rfc1123date = datetime.datetime.utcnow().strftime(
-            "%a, %d %b %Y %H:%M:%S GMT"
-        )
+        rfc1123date = self.date_provider.now()
         content_length = len(body)
         signature = self._build_signature(
-            rfc1123date, content_length, method, content_type, resource
+            rfc1123date,
+            content_length,
+            self.log_request.METHOD,
+            self.log_request.CONTENT_TYPE,
+            self.log_request.RESOURCE,
         )
-        uri = f"https://{self.customer_id}.ods.opinsights.azure.com{resource}?api-version=2016-04-01"
         headers = {
-            "Content-Type": content_type,
+            "Content-Type": self.log_request.CONTENT_TYPE,
             "Authorization": signature,
             "Log-Type": self.log_type,
             "x-ms-date": rfc1123date,
         }
-        response = requests.post(uri, data=body, headers=headers)
-        return response
+        self.log_request.send(self.customer_id, headers, body)
