@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import expr
+from pyspark.sql.functions import spark_partition_id
 from pyspark.sql.types import StructType, StructField, StringType
 
 import mlflow.sklearn
@@ -32,9 +32,9 @@ class ServingPipeline:
         schema = StructType.fromJson(json.loads(df.schema.json()))
         schema.add(StructField("prediction", StringType(), True))
 
-        df = df.groupBy(
-            expr("monotonically_increasing_id() % 1000")
-        ).applyInPandas(self._predict_species, schema)
+        df = df.groupBy(spark_partition_id()).applyInPandas(
+            self._predict_species, schema
+        )
 
         self.serving_data.save_data(df, "iris_results")
 
