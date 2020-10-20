@@ -17,7 +17,13 @@ class LogAnalytics:
         """
         self.id = uuid.uuid4()
 
-    def init(self, customer_id, shared_key, log_type, category=""):
+    def init(
+        self,
+        customer_id: str,
+        shared_key: str,
+        log_type: str,
+        category: str = "",
+    ) -> None:
         """Initialise this instance so that it is ready to send messages
            to a Log Analytics workspace.
 
@@ -32,7 +38,7 @@ class LogAnalytics:
         self.log_type = log_type
         self.category = category
 
-    def log(self, level, message):
+    def log(self, level: str, message: str) -> None:
         """Create and post a log message to the Log Analytics workspace.
 
         Args:
@@ -53,8 +59,13 @@ class LogAnalytics:
             self._post_data(body)
 
     def _build_signature(
-        self, date, content_length, method, content_type, resource
-    ):
+        self,
+        date: str,
+        content_length: int,
+        method: str,
+        content_type: str,
+        resource: str,
+    ) -> str:
         """Create a signature for the specified message.
 
         Args:
@@ -79,7 +90,7 @@ class LogAnalytics:
         authorization = f"SharedKey {self.customer_id}:{encoded_hash}"
         return authorization
 
-    def _post_data(self, body):
+    def _post_data(self, body: str) -> requests.Response:
         """Send the specified data to the Log Analytics workspace.
 
         Args:
