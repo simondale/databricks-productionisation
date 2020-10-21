@@ -29,20 +29,14 @@ stages:
           python setup.py develop   
         displayName: Setup environment     
       - bash: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"          
           source .venv/bin/activate
-          pylint src/iris_model
+          pylint --output-format=msvs --reports=yes src/iris_model
         displayName: Execute linting rules (pylint)
       - bash: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"          
           source .venv/bin/activate
           flake8 src/iris_model
         displayName: Execute linting rules (flake8)
       - bash: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"          
           source .venv/bin/activate
           pytest --disable-warnings -rp -vv --cov-report term --cov-report xml:cov.xml --cov=. -o junit_family=xunit2 --junitxml=TEST-iris_model.xml tests/
         displayName: Execute unit tests
@@ -64,9 +58,7 @@ stages:
         inputs:
           codeCoverageTool: 'Cobertura'
           summaryFileLocation: '**/cov.xml'
-      - bash: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"          
+      - bash: |          
           source .venv/bin/activate
           python setup.py bdist_wheel
         displayName: Build library
@@ -79,9 +71,7 @@ stages:
             **/TEST-*.xml
             dist/**.whl
           TargetFolder: $(Build.ArtifactStagingDirectory)
-      - bash: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"          
+      - bash: |          
           source .venv/bin/activate
           databricks workspace mkdirs /Experiments
           databricks fs cp --recursive --overwrite $(Build.ArtifactStagingDirectory)/dist dbfs:/models/
@@ -90,9 +80,7 @@ stages:
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)      
-      - bash: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"          
+      - bash: |          
           source .venv/bin/activate
           python scripts/submit.py --file dbfs:/driver/datapipeline.py
         displayName: Execute data pipeline
@@ -100,8 +88,6 @@ stages:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
       - bash: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"          
           source .venv/bin/activate
           python scripts/submit.py --file dbfs:/driver/features.py
         displayName: Execute features pipeline
@@ -109,8 +95,6 @@ stages:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
       - bash: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"          
           source .venv/bin/activate
           python scripts/submit.py --file dbfs:/driver/training.py
         displayName: Execute training pipeline
@@ -118,8 +102,6 @@ stages:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
       - bash: |
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"          
           source .venv/bin/activate
           python scripts/submit.py --file dbfs:/driver/serving.py
         displayName: Execute serving pipeline
