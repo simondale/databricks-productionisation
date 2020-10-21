@@ -15,7 +15,7 @@ class TestDataProvider(DataProvider):
         self.target = data_frame
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def spark():
     spark = SparkSession.builder.getOrCreate()
     return spark

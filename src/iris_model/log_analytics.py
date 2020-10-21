@@ -17,7 +17,7 @@ class Rfc1123DateProvider:
         """Initialises this instance to an optional datetime.
 
         Args:
-            datetime:        The optional datetime to use        
+            datetime:        The optional datetime to use
         """
         self.datetime = datetime
 

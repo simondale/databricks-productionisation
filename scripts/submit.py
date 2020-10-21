@@ -19,7 +19,7 @@ def main(args):
             "spark_version": args.get(
                 "spark_version", "7.1.x-cpu-ml-scala2.12"
             ),
-            "node_type_id": args.get("node_type", "Standard_F8s"),
+            "node_type_id": args.get("node_type", "Standard_F4s"),
             "num_workers": args.get("num_workers", 1),
         },
         "libraries": [

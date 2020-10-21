@@ -15,26 +15,35 @@ stages:
     steps:
       - bash: |
           echo {} > ~/.databricks-connect
-          conda env create --force --name databricks --file conda.yml
-        displayName: Setup environment
+          curl -L https://pyenv.run | bash
+          export PATH="/home/vsts/.pyenv/bin:$PATH"
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+          pyenv install 3.7.6
+          pyenv global 3.7.6
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+          python setup.py develop   
+        displayName: Setup environment     
       - bash: |
-          eval "$(conda shell.bash hook)"
-          conda activate databricks
-          python setup.py develop
-        displayName: Add local source tree to environment
-      - bash: |
-          eval "$(conda shell.bash hook)"
-          conda activate databricks
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"          
+          source .venv/bin/activate
           pylint src/iris_model
         displayName: Execute linting rules (pylint)
       - bash: |
-          eval "$(conda shell.bash hook)"
-          conda activate databricks
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"          
+          source .venv/bin/activate
           flake8 src/iris_model
         displayName: Execute linting rules (flake8)
       - bash: |
-          eval "$(conda shell.bash hook)"
-          conda activate databricks
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"          
+          source .venv/bin/activate
           pytest --disable-warnings -rp -vv --cov-report term --cov-report xml:cov.xml --cov=. -o junit_family=xunit2 --junitxml=TEST-iris_model.xml tests/
         displayName: Execute unit tests
         env:
@@ -56,8 +65,9 @@ stages:
           codeCoverageTool: 'Cobertura'
           summaryFileLocation: '**/cov.xml'
       - bash: |
-          eval "$(conda shell.bash hook)"
-          conda activate databricks
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"          
+          source .venv/bin/activate
           python setup.py bdist_wheel
         displayName: Build library
       - task: CopyFiles@2
@@ -70,43 +80,47 @@ stages:
             dist/**.whl
           TargetFolder: $(Build.ArtifactStagingDirectory)
       - bash: |
-          eval "$(conda shell.bash hook)"
-          conda activate databricks
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"          
+          source .venv/bin/activate
           databricks workspace mkdirs /Experiments
           databricks fs cp --recursive --overwrite $(Build.ArtifactStagingDirectory)/dist dbfs:/models/
           databricks fs cp --recursive --overwrite $(Build.ArtifactStagingDirectory)/driver dbfs:/driver/
         displayName: Upload to Databricks
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
-            DATABRICKS_TOKEN: $(DatabricksToken)
-      
+            DATABRICKS_TOKEN: $(DatabricksToken)      
       - bash: |
-          eval "$(conda shell.bash hook)"
-          conda activate databricks
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"          
+          source .venv/bin/activate
           python scripts/submit.py --file dbfs:/driver/datapipeline.py
         displayName: Execute data pipeline
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
       - bash: |
-          eval "$(conda shell.bash hook)"
-          conda activate databricks
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"          
+          source .venv/bin/activate
           python scripts/submit.py --file dbfs:/driver/features.py
         displayName: Execute features pipeline
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
       - bash: |
-          eval "$(conda shell.bash hook)"
-          conda activate databricks
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"          
+          source .venv/bin/activate
           python scripts/submit.py --file dbfs:/driver/training.py
         displayName: Execute training pipeline
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
       - bash: |
-          eval "$(conda shell.bash hook)"
-          conda activate databricks
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"          
+          source .venv/bin/activate
           python scripts/submit.py --file dbfs:/driver/serving.py
         displayName: Execute serving pipeline
         env:
