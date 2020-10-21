@@ -11,17 +11,10 @@ def main(args):
         host=os.environ["DATABRICKS_HOST"],
         token=os.environ["DATABRICKS_TOKEN"],
     )
-    runs = RunsApi(api)
+    runs = RunsApi(api)    
 
     json = {
         "run_name": "datapipeline",
-        "new_cluster": {
-            "spark_version": args.get(
-                "spark_version", "7.1.x-cpu-ml-scala2.12"
-            ),
-            "node_type_id": args.get("node_type", "Standard_F4s"),
-            "num_workers": args.get("num_workers", 1),
-        },
         "libraries": [
             {
                 "whl": args.get(
@@ -31,8 +24,22 @@ def main(args):
         ],
         "spark_python_task": {
             "python_file": args.get("file", "dbfs:/driver/datapipeline.py")
-        },
+        }
     }
+
+    cluster_id = args.get("cluster_id")
+    if cluster_id is None:
+        json.update({
+            "new_cluster": {
+                "spark_version": args.get(
+                    "spark_version", "7.1.x-cpu-ml-scala2.12"
+                ),
+                "node_type_id": args.get("node_type", "Standard_F4s"),
+                "num_workers": args.get("num_workers", 1),
+            }
+        })
+    else:
+        json.update({"existing_cluster_id": cluster_id})
 
     rsp = runs.submit_run(json)
 
@@ -59,6 +66,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_workers")
     parser.add_argument("--file")
     parser.add_argument("--library")
+    parser.add_argument("--cluster-id")
     args = vars(parser.parse_args())
     args = {k: v for k, v in args.items() if v is not None}
     main(args)

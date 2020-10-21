@@ -82,28 +82,28 @@ stages:
             DATABRICKS_TOKEN: $(DatabricksToken)      
       - bash: |          
           source .venv/bin/activate
-          python scripts/submit.py --file dbfs:/driver/datapipeline.py
+          python scripts/submit.py --file dbfs:/driver/datapipeline.py --cluster-id $(DatabricksCluster)
         displayName: Execute data pipeline
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
       - bash: |
           source .venv/bin/activate
-          python scripts/submit.py --file dbfs:/driver/features.py
+          python scripts/submit.py --file dbfs:/driver/features.py --cluster-id $(DatabricksCluster)
         displayName: Execute features pipeline
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
       - bash: |
           source .venv/bin/activate
-          python scripts/submit.py --file dbfs:/driver/training.py
+          python scripts/submit.py --file dbfs:/driver/training.py --cluster-id $(DatabricksCluster)
         displayName: Execute training pipeline
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
             DATABRICKS_TOKEN: $(DatabricksToken)
       - bash: |
           source .venv/bin/activate
-          python scripts/submit.py --file dbfs:/driver/serving.py
+          python scripts/submit.py --file dbfs:/driver/serving.py --cluster-id $(DatabricksCluster)
         displayName: Execute serving pipeline
         env:
             DATABRICKS_HOST: $(DatabricksUrl)
