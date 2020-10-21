@@ -30,15 +30,15 @@ stages:
         displayName: Setup environment     
       - bash: |
           source .venv/bin/activate
-          pylint --output-format=msvs --reports=yes src/iris_model
+          pylint --output-format=msvs --reports=yes src/
         displayName: Execute linting rules (pylint)
       - bash: |
           source .venv/bin/activate
-          flake8 src/iris_model
+          flake8 src/
         displayName: Execute linting rules (flake8)
       - bash: |
           source .venv/bin/activate
-          pytest --disable-warnings -rp -vv --cov-report term --cov-report xml:cov.xml --cov=. -o junit_family=xunit2 --junitxml=TEST-iris_model.xml tests/
+          pytest --disable-warnings -rp -vv --cov-report term --cov-report xml:cov.xml --cov=src --cov=tests -o junit_family=xunit2 --junitxml=TEST-iris_model.xml tests/
         displayName: Execute unit tests
         env:
             SPARK_LOCAL_IP: 127.0.0.1
