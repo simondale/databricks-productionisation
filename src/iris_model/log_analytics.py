@@ -29,7 +29,7 @@ class Rfc1123DateProvider:
             The formatted datetime string
         """
         return (
-            self.datetime
+            datetime.datetime.fromisoformat(self.datetime)
             if self.datetime is not None
             else datetime.datetime.utcnow()
         ).strftime(Rfc1123DateProvider.FORMAT)
@@ -43,7 +43,7 @@ class LogAnalyticsRequest:
     METHOD = "POST"
     CONTENT_TYPE = "application/json"
 
-    def send(self, customer_id: str, headers: dict, data: str):
+    def send(self, customer_id: str, headers: dict, data: str) -> None:
         """
 
         Args:
@@ -68,7 +68,11 @@ class UuidGenerator:
         Args:
             uuid:       The optional UUID list
         """
-        self.uuids = uuids
+        self.uuids = (
+            [str(u) for u in uuids]
+            if uuids is not None
+            else None
+        )
 
     def new(self):
         """Generates a new UUID or uses the specified (optional) value.
@@ -102,6 +106,10 @@ class LogAnalytics:
         self.log_request = log_request
         self.uuid_provider = uuid_provider
         self.id = self.uuid_provider.new()
+        self.customer_id = None
+        self.shared_key = None
+        self.log_type = None
+        self.category = None
 
     def init(
         self,
@@ -176,7 +184,7 @@ class LogAnalytics:
         authorization = f"SharedKey {self.customer_id}:{encoded_hash}"
         return authorization
 
-    def _post_data(self, body: str):
+    def _post_data(self, body: str) -> None:
         """Send the specified data to the Log Analytics workspace.
 
         Args:

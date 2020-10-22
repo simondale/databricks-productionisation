@@ -77,4 +77,4 @@ def test_log_analytics_logs_message():
 
 
 if __name__ == "__main__":
-    test_build_signature()
+    test_log_analytics_logs_message()
