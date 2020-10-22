@@ -43,8 +43,8 @@ class LogAnalyticsRequest:
     METHOD = "POST"
     CONTENT_TYPE = "application/json"
 
-    def send(self, customer_id: str, headers: dict, data: str) -> None:
-        """
+    def send(self, customer_id: str, headers: dict, data: str) -> None:  # pragma: nocover
+        """Builds the URI and makes the HTTP request to LogAnalytics.
 
         Args:
             customer_id:    The customer ID of the Log Analytics workspace
