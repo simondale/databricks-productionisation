@@ -1,5 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import spark_partition_id
+from pyspark.sql.functions import lit  # pylint: disable=no-name-in-module
 from pyspark.sql.types import StructType, StructField, StringType
 
 import mlflow.sklearn
@@ -32,14 +33,17 @@ class ServingPipeline:
         schema = StructType.fromJson(json.loads(df.schema.json()))
         schema.add(StructField("prediction", StringType(), True))
 
-        df = df.groupBy(spark_partition_id()).applyInPandas(
-            self._predict_species, schema
+        df = df.groupBy(spark_partition_id(), lit('iris'), lit('None')).applyInPandas(
+            self, schema
         )
 
         self.serving_data.save_data(df, "iris_results")
 
-    @staticmethod
-    def _predict_species(pdf: pd.DataFrame) -> pd.DataFrame:
-        model = mlflow.sklearn.load_model("models:/iris/None")
+    def __call__(self, key: tuple, pdf: pd.DataFrame) -> pd.DataFrame:
+        return self._predict_species(key, pdf)
+
+    def _predict_species(self, key: tuple, pdf: pd.DataFrame) -> pd.DataFrame:
+        _, model_name, model_version = key
+        model = mlflow.sklearn.load_model(f"models:/{model_name}/{model_version}")
         pdf["prediction"] = model.predict(pdf)
         return pdf
