@@ -1,11 +1,17 @@
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import spark_partition_id
 from pyspark.sql.functions import lit  # pylint: disable=no-name-in-module
-from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.sql.types import (
+    StructType,
+    StructField,
+    StringType,
+    TimestampType,
+)
 
 import mlflow.sklearn
 import pandas as pd
 import json
+import datetime
 
 
 class ServingDataProvider:
@@ -17,7 +23,9 @@ class ServingDataProvider:
         return self.spark.table("iris_data")
 
     def save_data(self, data: DataFrame, target: str):
-        data.write.format("delta").mode("overwrite").saveAsTable(target)
+        data.write.format("delta").option("mergeSchema", True).mode(
+            "append"
+        ).saveAsTable(target)
 
 
 class ServingPipeline:
@@ -32,10 +40,13 @@ class ServingPipeline:
 
         schema = StructType.fromJson(json.loads(df.schema.json()))
         schema.add(StructField("prediction", StringType(), True))
+        schema.add(StructField("model_name", StringType(), True))
+        schema.add(StructField("model_version", StringType(), True))
+        schema.add(StructField("serving_datetime", TimestampType(), True))
 
-        df = df.groupBy(spark_partition_id(), lit('iris'), lit('None')).applyInPandas(
-            self, schema
-        )
+        df = df.groupBy(
+            spark_partition_id(), lit("iris"), lit("None")
+        ).applyInPandas(self, schema)
 
         self.serving_data.save_data(df, "iris_results")
 
@@ -44,6 +55,11 @@ class ServingPipeline:
 
     def _predict_species(self, key: tuple, pdf: pd.DataFrame) -> pd.DataFrame:
         _, model_name, model_version = key
-        model = mlflow.sklearn.load_model(f"models:/{model_name}/{model_version}")
+        model = mlflow.sklearn.load_model(
+            f"models:/{model_name}/{model_version}"
+        )
         pdf["prediction"] = model.predict(pdf)
+        pdf["model_name"] = model_name
+        pdf["model_version"] = model_version
+        pdf["serving_datetime"] = datetime.datetime.utcnow()
         return pdf
