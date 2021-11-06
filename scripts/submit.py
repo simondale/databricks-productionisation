@@ -11,7 +11,7 @@ def main(args):
         host=os.environ["DATABRICKS_HOST"],
         token=os.environ["DATABRICKS_TOKEN"],
     )
-    runs = RunsApi(api)    
+    runs = RunsApi(api)
 
     json = {
         "run_name": "datapipeline",

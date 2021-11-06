@@ -12,6 +12,7 @@ import mlflow.sklearn
 import pandas as pd
 import json
 import datetime
+import logging
 
 
 class ServingDataProvider:
@@ -33,6 +34,9 @@ class ServingPipeline:
         self.serving_data = serving_data
 
     def make_predictions(self):
+        logger = logging.getLogger(name=__name__)
+        logger.info('making predictions')
+
         df = self.serving_data.load_data()
         df = df.select(
             "sepal_length", "sepal_width", "petal_length", "petal_width"
@@ -46,14 +50,12 @@ class ServingPipeline:
 
         df = df.groupBy(
             spark_partition_id(), lit("iris"), lit("None")
-        ).applyInPandas(self, schema)
+        ).applyInPandas(self._predict_species, schema)
 
         self.serving_data.save_data(df, "iris_results")
 
-    def __call__(self, key: tuple, pdf: pd.DataFrame) -> pd.DataFrame:
-        return self._predict_species(key, pdf)
-
-    def _predict_species(self, key: tuple, pdf: pd.DataFrame) -> pd.DataFrame:
+    @staticmethod
+    def _predict_species(key: tuple, pdf: pd.DataFrame) -> pd.DataFrame:
         _, model_name, model_version = key
         model = mlflow.sklearn.load_model(
             f"models:/{model_name}/{model_version}"
